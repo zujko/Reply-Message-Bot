@@ -6,61 +6,41 @@ Status: Not Working/Not Tested/Not Finished
 from peewee import *
 import praw
 import time
-from _mysql import *
+import sqlite3
 
-#--------------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------------
 # Database stuff
 #--------------------------------------------------------------------------------------------
+done = []
 
 # Insert your db credentials
-db = MySQLDatabase('reddit', host='localhost', user='root', passwd='')
-done = []
-class Submissions(Model):
-    subid = TextField()
+connection = sqlite3.connect('test.db')
 
-    class meta:
-        database = db
-
-db.connect()
-Submissions.create_table(True)
-
-def is_added(submission_id):
-    try:
-        submissions = Submissions.get(Submissions.subid == submission_id)
-        return True
-    except:
-        return False
-
-def add_id(submission_id):
-    if not is_added(submission_id):
-        Submissions(subid=submission_id).save()
-
-def flush():
-    sub = Submissions.select()
-    for x in sub:
-        x.delete_instance()
 
 def is_done(submission_id):
-    if not submission_id in done and not is_added(submission_id):
+    if submission_id in done:
         return True
+    else:
+        return False
+
 #-------------------------------------------------------------------------------------------
 # Bot code
 #-------------------------------------------------------------------------------------------
 
-user_name = raw_input('What is the bots name?: ')
-password = raw_input('What is the bots password?: ')
+user_name = 'BOT USERNAME'
+password = 'BOT PASSWORD'
 USERAGENT = 'A bot that finds your username when mentioned and messages you a link to that thread'
-recip = raw_input('Who is this message going to?: ')
+recip = 'someuser'
 MAXPOSTS = 100
 WAIT = 30
-SUBREDDIT = raw_input('What subreddit do you want to search?: ')
+SUBREDDIT = 'SUBREDDIT'
 r = praw.Reddit(USERAGENT)
-r.login(user_name,password)
+r.login(user_name, password)
 
 def find_name():
-
     subreddit = r.get_subreddit(SUBREDDIT)
-    posts = subreddit.get_comments(limit=1)
+    posts = subreddit.get_comments(limit=MAXPOSTS)
     for comment in posts:
         postingid = comment.id
         if not is_done(postingid):
@@ -72,6 +52,13 @@ def find_name():
             body = comment.body.lower()
             print(body)
 
+def reply():
+    pass
+
+def message():
+    pass
+
+
 while True:
     find_name()
-    time.wait(WAIT)
+    time.sleep(WAIT)
