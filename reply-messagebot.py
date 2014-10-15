@@ -1,7 +1,7 @@
 """
 Reply-Message-Bot
 
-Status: Not Working/Not Tested/Not Finished 
+github.com/z-ko
 """
 from peewee import *
 import praw
@@ -12,17 +12,35 @@ import sqlite3
 # --------------------------------------------------------------------------------------------
 # Database stuff
 #--------------------------------------------------------------------------------------------
-done = []
-
-# Insert your db credentials
-connection = sqlite3.connect('test.db')
 
 
+db = SqliteDatabase('DATABASE FILE')
+db.connect()
+
+class CustomModel(Model):
+    class Meta:
+        database = db
+
+class Ids(CustomModel):
+    subid = CharField()
+
+try:
+    Ids.create_table()
+except OperationalError:
+    pass
+    
+
+def addid(submission_id):
+    idnum = Ids()
+    idnum.subid = submission_id
+    idnum.save()
+    
+    
 def is_done(submission_id):
-    if submission_id in done:
-        return True
-    else:
-        return False
+    for subiddb in Ids.select():
+        if subiddb.subid == submission_id:
+            return True 
+    return False
 
 #-------------------------------------------------------------------------------------------
 # Bot code
@@ -51,10 +69,11 @@ def find_name():
             post_link = comment.permalink
             body = comment.body.lower()
            # message(post_link)
-           # print('messaged')
-            reply(comment)
-            print('replied')
-            
+           # print('message sent')
+           # reply(comment)
+           # print('replied')
+            addid(postingid)
+                 
 
 def reply(comment):
     comment.reply(replytxt)
@@ -65,4 +84,5 @@ def message(link):
 
 while True:
     find_name()
+    print('waiting')
     time.sleep(WAIT)
