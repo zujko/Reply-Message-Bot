@@ -27,7 +27,7 @@ def is_done(submission_id):
 #-------------------------------------------------------------------------------------------
 # Bot code
 #-------------------------------------------------------------------------------------------
-
+replytxt = 'COMMENT REPLY'
 user_name = 'BOT USERNAME'
 password = 'BOT PASSWORD'
 USERAGENT = 'A bot that finds your username when mentioned and messages you a link to that thread'
@@ -50,13 +50,17 @@ def find_name():
                 comment_poster = 'USER NO LONGER EXISTS'
             post_link = comment.permalink
             body = comment.body.lower()
-            print(body)
+           # message(post_link)
+           # print('messaged')
+            reply(comment)
+            print('replied')
+            
 
-def reply():
-    pass
+def reply(comment):
+    comment.reply(replytxt)
 
-def message():
-    pass
+def message(link):
+    r.send_message(recip, 'You\'ve been mentioned!', 'Here is the link! ' + link, captcha=None)
 
 
 while True:
