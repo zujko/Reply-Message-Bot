@@ -8,11 +8,9 @@ import praw
 import time
 import sqlite3
 
-
 # --------------------------------------------------------------------------------------------
 # Database stuff
 #--------------------------------------------------------------------------------------------
-
 
 db = SqliteDatabase('DATABASE FILE')
 db.connect()
@@ -45,14 +43,15 @@ def is_done(submission_id):
 #-------------------------------------------------------------------------------------------
 # Bot code
 #-------------------------------------------------------------------------------------------
-replytxt = 'COMMENT REPLY'
 user_name = 'BOT USERNAME'
 password = 'BOT PASSWORD'
 USERAGENT = 'A bot that finds your username when mentioned and messages you a link to that thread'
-recip = 'someuser'
+recip = 'USER TO FIND IN COMMENTS AND MESSAGE'
 MAXPOSTS = 100
 WAIT = 30
 SUBREDDIT = 'SUBREDDIT'
+replytxt = ('/u/%s has been notified of your comment. \n\n-%s' % (recip, user_name))
+
 r = praw.Reddit(USERAGENT)
 r.login(user_name, password)
 
@@ -61,25 +60,28 @@ def find_name():
     posts = subreddit.get_comments(limit=MAXPOSTS)
     for comment in posts:
         postingid = comment.id
-        if not is_done(postingid):
-            try:
-                comment_poster = comment.author.name
-            except AttributeError:
-                comment_poster = 'USER NO LONGER EXISTS'
-            post_link = comment.permalink
+        try:
+            comment_poster = comment.author.name
+        except AttributeError:
+            comment_poster = 'USER NO LONGER EXISTS'
+        if not is_done(postingid) and comment_poster != user_name: 
             body = comment.body.lower()
-           # message(post_link)
-           # print('message sent')
-           # reply(comment)
-           # print('replied')
-            addid(postingid)
+            lst = body.split()
+            if recip in lst or '/u/'+recip in lst or 'u/'+recip in lst:
+                print('user found')
+                post_link = comment.permalink
+                message(post_link, comment_poster)
+                print('message sent')
+                reply(comment)
+                print('replied')
+                addid(postingid)
                  
 
 def reply(comment):
     comment.reply(replytxt)
 
-def message(link):
-    r.send_message(recip, 'You\'ve been mentioned!', 'Here is the link! ' + link, captcha=None)
+def message(link, poster):
+    r.send_message(recip,'/u/'+ poster + ' mentioned you in a comment!', 'Here is the link! %s \n\n-%s' % (link, user_name), captcha=None)
 
 
 while True:
