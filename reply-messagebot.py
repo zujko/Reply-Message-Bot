@@ -99,7 +99,7 @@ def find_name():
                 print('message sent')
                 reply(comment)
                 print('replied')
-                addid(postingid)
+            addid(postingid)
                 
                  
 
