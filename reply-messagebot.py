@@ -6,7 +6,7 @@ github.com/z-ko
 from peewee import *
 import praw
 import time
-import sqlite3
+
 
 # --------------------------------------------------------------------------------------------
 # Database stuff
@@ -23,22 +23,33 @@ class Ids(CustomModel):
     subid = CharField()
 
 try:
-    Ids.create_table()
-except OperationalError:
+    Ids.create_table()  #Create table subid
+except OperationalError:    #If it already exists, pass
     pass
     
 
 def addid(submission_id):
+    """
+    Add the comment id to the database.
+    """
     idnum = Ids()
     idnum.subid = submission_id
     idnum.save()
-    
-    
+        
+
 def is_done(submission_id):
-    for subiddb in Ids.select():
-        if subiddb.subid == submission_id:
-            return True 
-    return False
+    """ 
+    Check if the comment id is already in the database
+    return True if the comment id is in the database.
+    Otherwise, return False
+    """ 
+    try:
+        Ids.get(Ids.subid == submission_id)
+        return True
+    except DoesNotExist:
+        return False
+      
+      
 
 #-------------------------------------------------------------------------------------------
 # Bot code
@@ -56,6 +67,20 @@ r = praw.Reddit(USERAGENT)
 r.login(user_name, password)
 
 def find_name():
+    """
+    Get comments from specified subreddit.
+
+    Loop through all comments, on each loop,
+    get the comment id and poster username.
+ 
+    If the comment id is not in the database and
+    the comment poster is not the bot's username,
+    get the comment body and split it.
+
+    If the username we are looking for is in the list,
+    get the link then message the user we are looking for
+    and reply to the comment.  
+    """
     subreddit = r.get_subreddit(SUBREDDIT)
     posts = subreddit.get_comments(limit=MAXPOSTS)
     for comment in posts:
@@ -75,12 +100,19 @@ def find_name():
                 reply(comment)
                 print('replied')
                 addid(postingid)
+                
                  
 
 def reply(comment):
+    """
+    Reply to comment with replytxt
+    """
     comment.reply(replytxt)
 
 def message(link, poster):
+    """
+    Send a message to recip
+    """
     r.send_message(recip,'/u/'+ poster + ' mentioned you in a comment!', 'Here is the link! %s \n\n-%s' % (link, user_name), captcha=None)
 
 
